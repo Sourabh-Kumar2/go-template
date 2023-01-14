@@ -1,0 +1,52 @@
+package main
+
+import (
+    "net/http"
+    "sync"
+
+    "github.com/DTSL/golang-libraries/httpjson"
+    "github.com/gorilla/mux"
+)
+
+{{ $handler := print . "Handler" -}}
+
+type {{ $handler }} struct {
+    // todo: Add fields here..
+}
+
+func configure{{ toTitle . }}HTTPRoute(r *mux.Route) *mux.Route {
+    return r.Methods(/* todo: Add method here */).Path(""/* todo: Add your path here*/)
+}
+
+func (h *{{ $handler }}) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+    handleHTTP(w, req, ""/* todo: add handler name */, h.handle)
+}
+
+func (h *{{ $handler }}) handle(w http.ResponseWriter, req *http.Request) error {
+	ctx:=req.Context()
+    // todo: Implement the handler
+    return httpjson.WriteResponse(
+        ctx,
+        w,
+        http.StatusOK,
+        nil,
+    )
+}
+
+func new{{ toTitle $handler }}(dic *diContainer) (*{{ $handler }}, error) {
+    return &{{ $handler }}{}, nil
+}
+
+func new{{ toTitle . }}DIProvider(dic *diContainer) func() (http.Handler, error){
+    var h *{{ $handler }}
+    var mu sync.Mutex
+    return func() (http.Handler, error) {
+        var err error
+        mu.Lock()
+        defer mu.Unlock()
+        if h == nil {
+            h, err = new{{ toTitle $handler }}(dic)
+        }
+        return h, err
+    }
+}
